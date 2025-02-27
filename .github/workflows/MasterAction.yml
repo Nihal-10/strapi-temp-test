@@ -1,0 +1,59 @@
+name: Deploy Strapi app to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pull application from Github
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          password: ${{ secrets.DROPLET_PRIVATE_KEY }}
+          script: |
+            export PATH="$PATH:/root/.nvm/versions/node/v20.18.1/bin"
+            export HOME="/root"
+            cd /root/Welspun-One-Strapi
+            git pull --rebase --autostash
+
+      - name: Install npm dependency
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          password: ${{ secrets.DROPLET_PRIVATE_KEY }}
+          script: |
+            export PATH="$PATH:/root/.nvm/versions/node/v20.18.1/bin"
+            export HOME="/root"
+            cd /root/Welspun-One-Strapi
+            npm install
+
+      - name: Build Strapi Application
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          password: ${{ secrets.DROPLET_PRIVATE_KEY }}
+          script: |
+            export PATH="$PATH:/root/.nvm/versions/node/v20.18.1/bin"
+            export HOME="/root"
+            cd /root/Welspun-One-Strapi
+            npm run build
+
+      - name: Restart Strapi app
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          password: ${{ secrets.DROPLET_PRIVATE_KEY }}
+          script: |
+            export PATH="$PATH:/root/.nvm/versions/node/v20.18.1/bin"
+            export HOME="/root"
+            cd /root/Welspun-One-Strapi
+            pm2 restart all
